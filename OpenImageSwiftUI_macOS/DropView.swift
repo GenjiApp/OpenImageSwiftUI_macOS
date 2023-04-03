@@ -29,24 +29,15 @@ struct DropView: View {
           )
       }
     }
-    .onDrop(of: [.png, .jpeg, .url, .fileURL], isTargeted: $isDropTargeted) { providers in
-      guard let provider = providers.first
-      else { return false }
+    .onDrop(of: [.image], isTargeted: $isDropTargeted) { providers in
+      guard let provider = providers.first else { return false }
       if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
-        provider.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { data, error in
-          guard let imageData = data as? Data,
-                let newImage = NSImage(data: imageData)
+        provider.loadItem(forTypeIdentifier: UTType.image.identifier) { item, error in
+          guard error == nil,
+                let url = item as? URL,
+                let loadedImage = NSImage(contentsOf: url)
           else { return }
-          image = newImage
-        }
-      }
-      else if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
-        provider.loadItem(forTypeIdentifier: UTType.url.identifier, options: nil) { data, error in
-          guard let urlData = data as? Data,
-                let url = URL(dataRepresentation: urlData, relativeTo: nil),
-                let newImage = NSImage(contentsOf: url)
-          else { return }
-          image = newImage
+          image = loadedImage
         }
       }
       return true
